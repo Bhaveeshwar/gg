@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dance Academy</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+
+    <!-- 🌟 Grand Welcome Section -->
+    <div id="welcome">
+        <h1 class="fade-in">Welcome to the Ultimate Dance Experience! 💃🕺</h1>
+    </div>
+
+    <!-- 🚀 Navigation Bar -->
+    <nav>
+        <ul>
+            <li><button onclick="showSection('home')">Home</button></li>
+            <li><button onclick="showSection('about')">About</button></li>
+            <li><button onclick="showSection('classes')">Classes</button></li>
+            <li><button onclick="showSection('booking')">Book a Class</button></li>
+            <li><button onclick="showSection('contact')">Contact</button></li>
+        </ul>
+    </nav>
+
+    <!-- 🌟 Sections -->
+    <section id="home" class="active">
+        <h2>Discover the Joy of Dance</h2>
+        <p>Join our professional dance academy and elevate your moves!</p>
+        <div class="video-container">
+            <video autoplay loop muted>
+                <source src="dance-video.mp4" type="video/mp4">
+            </video>
+        </div>
+    </section>
+
+    <section id="about">
+        <h2>About Us</h2>
+        <p>We are a premier dance academy offering a variety of styles.</p>
+    </section>
+
+    <section id="classes">
+        <h2>Our Classes</h2>
+        <p>Explore Ballet, Hip-Hop, Salsa, and more.</p>
+    </section>
+
+    <!-- 🎟 Booking Section -->
+    <section id="booking">
+        <h2>Book a Class</h2>
+        <form id="bookingForm">
+            <input type="text" id="fullName" placeholder="Full Name" required>
+            <input type="email" id="userEmail" placeholder="Email ID" required>
+            <input type="tel" id="userMobile" placeholder="Mobile Number" required>
+            <select id="danceClass" required>
+                <option value="">Select Dance Style</option>
+                <option value="Ballet">Ballet</option>
+                <option value="Hip-Hop">Hip-Hop</option>
+                <option value="Salsa">Salsa</option>
+            </select>
+            <select id="classTimings" required>
+                <option value="">Select Timings</option>
+                <option value="Morning (10 AM - 12 PM)">Morning (10 AM - 12 PM)</option>
+                <option value="Afternoon (2 PM - 4 PM)">Afternoon (2 PM - 4 PM)</option>
+                <option value="Evening (6 PM - 8 PM)">Evening (6 PM - 8 PM)</option>
+            </select>
+            <button type="submit">Book Now</button>
+        </form>
+        <div id="ticketDisplay" style="display:none;"></div>
+        <button id="cancelBooking" style="display:none;">Cancel Booking</button>
+    </section>
+
+    <section id="contact">
+        <h2>Contact Us</h2>
+        <p>Email: info@danceacademy.com</p>
+    </section>
+
+</body>
+</html>
