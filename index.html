@@ -41,34 +41,29 @@
         const scoreDisplay = document.querySelector(".score-display");
         const winnerDisplay = document.getElementById("winnerDisplay");
 
+        let player1, player2; // Declare players here
+
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            // Adjust player positions based on new canvas size
-            player1.bow.x = canvas.width * 0.25;
-            player1.bow.y = canvas.height - 100;
-            player2.bow.x = canvas.width * 0.75;
-            player2.bow.y = canvas.height - 100;
+            // Initialize players after canvas is resized
+            player1 = {
+                bow: { x: canvas.width * 0.25, y: canvas.height - 100 },
+                arrow: { x: canvas.width * 0.25, y: canvas.height - 100, angle: -Math.PI / 2, power: 0, isDragging: false, isReleased: false, vx: 0, vy: 0 },
+                score: 0,
+                touchId: null // Track touch ID for Player 1
+            };
+
+            player2 = {
+                bow: { x: canvas.width * 0.75, y: canvas.height - 100 },
+                arrow: { x: canvas.width * 0.75, y: canvas.height - 100, angle: -Math.PI / 2, power: 0, isDragging: false, isReleased: false, vx: 0, vy: 0 },
+                score: 0,
+                touchId: null // Track touch ID for Player 2
+            };
         }
 
         window.addEventListener("resize", resizeCanvas);
-        resizeCanvas();
-
-        // Player 1 (Left Side)
-        const player1 = {
-            bow: { x: canvas.width * 0.25, y: canvas.height - 100 },
-            arrow: { x: canvas.width * 0.25, y: canvas.height - 100, angle: -Math.PI / 2, power: 0, isDragging: false, isReleased: false, vx: 0, vy: 0 },
-            score: 0,
-            touchId: null // Track touch ID for Player 1
-        };
-
-        // Player 2 (Right Side)
-        const player2 = {
-            bow: { x: canvas.width * 0.75, y: canvas.height - 100 },
-            arrow: { x: canvas.width * 0.75, y: canvas.height - 100, angle: -Math.PI / 2, power: 0, isDragging: false, isReleased: false, vx: 0, vy: 0 },
-            score: 0,
-            touchId: null // Track touch ID for Player 2
-        };
+        resizeCanvas(); // Initialize canvas and players
 
         // Balloons fixed at the top
         let balloons = [
