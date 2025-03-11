@@ -44,6 +44,11 @@
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            // Adjust player positions based on new canvas size
+            player1.bow.x = canvas.width * 0.25;
+            player1.bow.y = canvas.height - 100;
+            player2.bow.x = canvas.width * 0.75;
+            player2.bow.y = canvas.height - 100;
         }
 
         window.addEventListener("resize", resizeCanvas);
