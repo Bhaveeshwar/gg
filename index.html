@@ -2,79 +2,290 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dance Academy</title>
-    <link rel="stylesheet" href="styles.css">
-    <script defer src="script.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Two-Player Archery Game</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #222; color: white; overflow: hidden; }
+        canvas { display: block; background: #87CEEB; touch-action: none; }
+        .score-display {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .winner-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
+    <canvas id="gameCanvas"></canvas>
+    <div class="score-display">Player 1: 0 | Player 2: 0</div>
+    <div class="winner-display" id="winnerDisplay"></div>
 
-    <!-- 🌟 Grand Welcome Section -->
-    <div id="welcome">
-        <h1 class="fade-in">Welcome to the Ultimate Dance Experience! 💃🕺</h1>
-    </div>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreDisplay = document.querySelector(".score-display");
+        const winnerDisplay = document.getElementById("winnerDisplay");
 
-    <!-- 🚀 Navigation Bar -->
-    <nav>
-        <ul>
-            <li><button onclick="showSection('home')">Home</button></li>
-            <li><button onclick="showSection('about')">About</button></li>
-            <li><button onclick="showSection('classes')">Classes</button></li>
-            <li><button onclick="showSection('booking')">Book a Class</button></li>
-            <li><button onclick="showSection('contact')">Contact</button></li>
-        </ul>
-    </nav>
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
 
-    <!-- 🌟 Sections -->
-    <section id="home" class="active">
-        <h2>Discover the Joy of Dance</h2>
-        <p>Join our professional dance academy and elevate your moves!</p>
-        <div class="video-container">
-            <video autoplay loop muted>
-                <source src="dance-video.mp4" type="video/mp4">
-            </video>
-        </div>
-    </section>
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
 
-    <section id="about">
-        <h2>About Us</h2>
-        <p>We are a premier dance academy offering a variety of styles.</p>
-    </section>
+        // Player 1 (Left Side)
+        const player1 = {
+            bow: { x: canvas.width * 0.25, y: canvas.height - 100 },
+            arrow: { x: canvas.width * 0.25, y: canvas.height - 100, angle: -Math.PI / 2, power: 0, isDragging: false, isReleased: false, vx: 0, vy: 0 },
+            score: 0,
+            touchId: null // Track touch ID for Player 1
+        };
 
-    <section id="classes">
-        <h2>Our Classes</h2>
-        <p>Explore Ballet, Hip-Hop, Salsa, and more.</p>
-    </section>
+        // Player 2 (Right Side)
+        const player2 = {
+            bow: { x: canvas.width * 0.75, y: canvas.height - 100 },
+            arrow: { x: canvas.width * 0.75, y: canvas.height - 100, angle: -Math.PI / 2, power: 0, isDragging: false, isReleased: false, vx: 0, vy: 0 },
+            score: 0,
+            touchId: null // Track touch ID for Player 2
+        };
 
-    <!-- 🎟 Booking Section -->
-    <section id="booking">
-        <h2>Book a Class</h2>
-        <form id="bookingForm">
-            <input type="text" id="fullName" placeholder="Full Name" required>
-            <input type="email" id="userEmail" placeholder="Email ID" required>
-            <input type="tel" id="userMobile" placeholder="Mobile Number" required>
-            <select id="danceClass" required>
-                <option value="">Select Dance Style</option>
-                <option value="Ballet">Ballet</option>
-                <option value="Hip-Hop">Hip-Hop</option>
-                <option value="Salsa">Salsa</option>
-            </select>
-            <select id="classTimings" required>
-                <option value="">Select Timings</option>
-                <option value="Morning (10 AM - 12 PM)">Morning (10 AM - 12 PM)</option>
-                <option value="Afternoon (2 PM - 4 PM)">Afternoon (2 PM - 4 PM)</option>
-                <option value="Evening (6 PM - 8 PM)">Evening (6 PM - 8 PM)</option>
-            </select>
-            <button type="submit">Book Now</button>
-        </form>
-        <div id="ticketDisplay" style="display:none;"></div>
-        <button id="cancelBooking" style="display:none;">Cancel Booking</button>
-    </section>
+        // Balloons fixed at the top
+        let balloons = [
+            { x: canvas.width / 2, y: 100, radius: 50, color: "red", isHit: false },
+            { x: canvas.width / 2, y: 100, radius: 50, color: "red", isHit: false },
+            { x: canvas.width / 2, y: 100, radius: 50, color: "red", isHit: false },
+            { x: canvas.width / 2, y: 100, radius: 50, color: "red", isHit: false },
+            { x: canvas.width / 2, y: 100, radius: 50, color: "red", isHit: false }
+        ];
+        let gravity = 0.02;
+        let arrowSpeed = 115;
 
-    <section id="contact">
-        <h2>Contact Us</h2>
-        <p>Email: info@danceacademy.com</p>
-    </section>
+        // Slides adjusted
+        let slides = [
+            { x: 50, y: 400, width: 150, height: 15, speed: 1.5 },
+            { x: 100, y: 600, width: 150, height: 15, speed: 1.2 },
+            { x: canvas.width - 250, y: 400, width: 150, height: 15, speed: -1.2 },
+            { x: canvas.width - 200, y: 600, width: 150, height: 15, speed: -1.5 }
+        ];
 
+        // Track active touches
+        let activeTouches = {};
+
+        // Touch Events
+        canvas.addEventListener("touchstart", (e) => {
+            for (let touch of e.touches) {
+                let touchX = touch.clientX;
+                let touchY = touch.clientY;
+
+                // Check if touch is near Player 1's bow
+                if (!player1.touchId && touchX < canvas.width / 2) {
+                    player1.touchId = touch.identifier;
+                    player1.arrow.isDragging = true;
+                    activeTouches[touch.identifier] = "player1";
+                }
+                // Check if touch is near Player 2's bow
+                else if (!player2.touchId && touchX >= canvas.width / 2) {
+                    player2.touchId = touch.identifier;
+                    player2.arrow.isDragging = true;
+                    activeTouches[touch.identifier] = "player2";
+                }
+            }
+        });
+
+        canvas.addEventListener("touchmove", (e) => {
+            for (let touch of e.touches) {
+                let player = activeTouches[touch.identifier] === "player1" ? player1 : player2;
+                if (player && player.arrow.isDragging) {
+                    let dx = touch.clientX - player.bow.x;
+                    let dy = touch.clientY - player.bow.y;
+                    let angle = Math.atan2(dy, dx);
+                    player.arrow.angle = angle;
+                    player.arrow.power = Math.min(Math.sqrt(dx * dx + dy * dy) / 2, 25); // Increased power range
+                }
+            }
+        });
+
+        canvas.addEventListener("touchend", (e) => {
+            for (let touch of e.changedTouches) {
+                let player = activeTouches[touch.identifier] === "player1" ? player1 : player2;
+                if (player && player.arrow.isDragging) {
+                    let speed = arrowSpeed * 0.1; // Increased speed
+                    player.arrow.vx = Math.cos(player.arrow.angle) * speed;
+                    player.arrow.vy = Math.sin(player.arrow.angle) * speed;
+                    player.arrow.isDragging = false;
+                    player.arrow.isReleased = true;
+                    player.touchId = null;
+                    delete activeTouches[touch.identifier];
+                }
+            }
+        });
+
+        function update() {
+            updatePlayer(player1);
+            updatePlayer(player2);
+
+            // Check for winner
+            if (player1.score >= 5) {
+                showWinner("Player 1 Wins!");
+                resetGame();
+            } else if (player2.score >= 5) {
+                showWinner("Player 2 Wins!");
+                resetGame();
+            }
+
+            // Update slides
+            for (let slide of slides) {
+                slide.x += slide.speed;
+                if (slide.x < 50 || slide.x + slide.width > canvas.width - 50) {
+                    slide.speed *= -1;
+                }
+            }
+        }
+
+        function updatePlayer(player) {
+            if (player.arrow.isReleased) {
+                player.arrow.x += player.arrow.vx;
+                player.arrow.y += player.arrow.vy;
+                player.arrow.vy += gravity;
+
+                // Check collision with balloons
+                for (let balloon of balloons) {
+                    if (!balloon.isHit) {
+                        let dx = player.arrow.x - balloon.x;
+                        let dy = player.arrow.y - balloon.y;
+                        let distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < balloon.radius + 10) { // Increased collision radius
+                            balloon.isHit = true;
+                            player.score++;
+                            updateScoreDisplay();
+                            resetArrow(player);
+                            break;
+                        }
+                    }
+                }
+
+                // Check collision with slides
+                for (let slide of slides) {
+                    if (
+                        player.arrow.x + 5 > slide.x &&
+                        player.arrow.x - 5 < slide.x + slide.width &&
+                        player.arrow.y + 5 > slide.y &&
+                        player.arrow.y - 5 < slide.y + slide.height
+                    ) {
+                        resetArrow(player);
+                        break;
+                    }
+                }
+
+                // Reset arrow if out of bounds
+                if (player.arrow.x > canvas.width || player.arrow.y > canvas.height || player.arrow.y < 0) {
+                    resetArrow(player);
+                }
+            }
+        }
+
+        function resetArrow(player) {
+            player.arrow.x = player.bow.x;
+            player.arrow.y = player.bow.y;
+            player.arrow.isReleased = false;
+            player.arrow.power = 0;
+        }
+
+        function resetGame() {
+            player1.score = 0;
+            player2.score = 0;
+            balloons.forEach(balloon => balloon.isHit = false);
+            resetArrow(player1);
+            resetArrow(player2);
+            updateScoreDisplay();
+        }
+
+        function updateScoreDisplay() {
+            scoreDisplay.innerText = `Player 1: ${player1.score} | Player 2: ${player2.score}`;
+        }
+
+        function showWinner(message) {
+            winnerDisplay.innerText = message;
+            winnerDisplay.style.display = "block";
+            setTimeout(() => {
+                winnerDisplay.style.display = "none";
+            }, 3000);
+        }
+
+        function drawBow(player) {
+            ctx.strokeStyle = "brown";
+            ctx.lineWidth = 10; // Thicker bow
+            ctx.beginPath();
+            ctx.arc(player.bow.x, player.bow.y, 80, 0, Math.PI, true); // Larger bow
+            ctx.stroke();
+        }
+
+        function drawArrow(player) {
+            ctx.save();
+            ctx.translate(player.arrow.x, player.arrow.y);
+            ctx.rotate(player.arrow.angle);
+            ctx.fillStyle = "black";
+            ctx.beginPath();
+            ctx.moveTo(0, -15); // Larger arrow
+            ctx.lineTo(40, 0);
+            ctx.lineTo(0, 15);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawBalloons() {
+            for (let balloon of balloons) {
+                if (!balloon.isHit) {
+                    ctx.fillStyle = balloon.color;
+                    ctx.beginPath();
+                    ctx.arc(balloon.x, balloon.y, balloon.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        function drawSlides() {
+            ctx.fillStyle = "gray";
+            for (let slide of slides) {
+                ctx.fillRect(slide.x, slide.y, slide.width, slide.height);
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBow(player1);
+            drawBow(player2);
+            drawArrow(player1);
+            drawArrow(player2);
+            drawBalloons();
+            drawSlides();
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
 </body>
 </html>
